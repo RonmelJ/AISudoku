@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>Sudoku Master - Free Online Sudoku Game with Multiple Difficulty Levels</title>
+    <meta name="title" content="Sudoku Master - Free Online Sudoku Game with Multiple Difficulty Levels">
+    <meta name="description"
+        content="Play Sudoku Master online for free! Challenge yourself with Easy, Medium, Hard, and Expert puzzles. Earn points, unlock beautiful skins, and track your progress. Perfect for puzzle enthusiasts!">
+    <meta name="keywords"
+        content="sudoku, puzzle game, brain game, logic puzzle, sudoku online, free sudoku, sudoku master, puzzle solver, mind game">
+    <meta name="author" content="Sudoku Master">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <meta property="og:title" content="Sudoku Master - Free Online Sudoku Game">
+    <meta property="og:description"
+        content="Challenge your mind with Sudoku Master! Play free online Sudoku with multiple difficulty levels, earn points, and unlock stunning visual themes.">
+    <meta property="og:image" content="https://yourdomain.com/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Sudoku Master">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://yourdomain.com/">
+    <meta property="twitter:title" content="Sudoku Master - Free Online Sudoku Game">
+    <meta property="twitter:description"
+        content="Challenge your mind with Sudoku Master! Play free online Sudoku with multiple difficulty levels and unlock beautiful themes.">
+    <meta property="twitter:image" content="https://yourdomain.com/twitter-image.png">
+
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="msapplication-TileColor" content="#4f46e5">
+
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts - Optimized Loading -->
+    <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=Quicksand:wght@400;500;600;700&family=Comfortaa:wght@400;600;700&family=Righteous&family=Bebas+Neue&family=Orbitron:wght@400;600;700&family=Nunito:wght@400;600;700&family=Fredoka+One&family=Audiowide&family=Space+Grotesk:wght@400;600;700&family=Exo+2:wght@600;700;800&family=Playfair+Display:wght@400;600;700&family=Cinzel:wght@600;700;800&family=Poppins:wght@400;600;700&family=Pacifico&display=swap">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=Quicksand:wght@400;500;600;700&family=Comfortaa:wght@400;600;700&family=Righteous&family=Bebas+Neue&family=Orbitron:wght@400;600;700&family=Nunito:wght@400;600;700&family=Fredoka+One&family=Audiowide&family=Space+Grotesk:wght@400;600;700&family=Exo+2:wght@600;700;800&family=Playfair+Display:wght@400;600;700&family=Cinzel:wght@600;700;800&family=Poppins:wght@400;600;700&family=Pacifico&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Sudoku Master",
+      "description": "Free online Sudoku game with multiple difficulty levels, point system, and unlockable visual themes",
+      "url": "https://yourdomain.com",
+      "applicationCategory": "GameApplication",
+      "genre": "Puzzle Game",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1250"
+      },
+      "featureList": [
+        "Multiple difficulty levels (Easy, Medium, Hard, Expert)",
+        "Point and achievement system",
+        "8 unlockable visual themes",
+        "Timer and streak tracking",
+        "Hint system",
+        "Auto-save progress"
+      ]
+    }
+    </script>
+
+
+<body>
+    <div class="background-gradient"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header" role="banner">
+            <h1 class="title">
+                Sudoku Master
+            </h1>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Points</span>
+                    <span class="stat-value" id="totalPoints">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Games Won</span>
+                    <span class="stat-value" id="gamesWon">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time</span>
+                    <span class="stat-value" id="timer">00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-container" role="main" aria-label="Sudoku game area">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="difficulty-selector">
+                    <label for="difficulty" class="control-label">Difficulty</label>
+                    <select id="difficulty" class="difficulty-select" aria-label="Select game difficulty">
+                        <option value="easy">Easy (100 pts)</option>
+                        <option value="medium" selected>Medium (250 pts)</option>
+                        <option value="hard">Hard (500 pts)</option>
+                        <option value="expert">Expert (1000 pts)</option>
+                    </select>
+                </div>
+
+                <button id="newGameBtn" class="btn btn-primary" aria-label="Start a new Sudoku game">
+                    <span class="btn-icon" aria-hidden="true">🎮</span>
+                    New Game
+                </button>
+
+                <button id="hintBtn" class="btn btn-hint" aria-label="Get a hint for 50 points">
+                    <span class="btn-icon" aria-hidden="true">💡</span>
+                    Hint (-50 pts)
+                </button>
+
+                <button id="pauseBtn" class="btn btn-pause" aria-label="Pause or resume the game">
+                    <span class="btn-icon" aria-hidden="true">⏸</span>
+                    Pause
+                </button>
+            </div>
+
+            <!-- Sudoku Grid -->
+            <div class="sudoku-wrapper">
+                <div id="sudokuGrid" class="sudoku-grid" role="grid" aria-label="Sudoku puzzle grid"></div>
+                <div class="game-info">
+                    <div class="info-item">
+                        <span class="info-icon">🔥</span>
+                        <span id="streakCounter">Streak: 0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">💡</span>
+                        <span id="hintsUsed">Hints: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Number Pad -->
+            <div class="number-pad" role="toolbar" aria-label="Number input pad">
+                <button class="num-btn" data-num="1">1</button>
+                <button class="num-btn" data-num="2">2</button>
+                <button class="num-btn" data-num="3">3</button>
+                <button class="num-btn" data-num="4">4</button>
+                <button class="num-btn" data-num="5">5</button>
+                <button class="num-btn" data-num="6">6</button>
+                <button class="num-btn" data-num="7">7</button>
+                <button class="num-btn" data-num="8">8</button>
+                <button class="num-btn" data-num="9">9</button>
+                <button class="num-btn erase-btn" data-num="0" aria-label="Erase cell value">
+                    <span aria-hidden="true">✕</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Skins Panel -->
+        <aside class="skins-panel" role="complementary" aria-label="Theme selection">
+            <h2 class="panel-title">Unlockable Skins</h2>
+            <div class="skins-grid" id="skinsGrid" role="list">
+                <!-- Skins will be populated by JavaScript -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victoryModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="confetti-container" id="confetti"></div>
+            <h2 class="modal-title" id="modalTitle"><span aria-hidden="true">🎉</span> Victory!</h2>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="victory-label">Time</span>
+                    <span class="victory-value" id="victoryTime">00:00</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-label">Points Earned</span>
+                    <span class="victory-value" id="pointsEarned">0</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-label">Time Bonus</span>
+                    <span class="victory-value" id="timeBonus">0</span>
+                </div>
+            </div>
+            <div id="skinUnlocked" class="skin-unlocked-message"></div>
+            <button id="closeModal" class="btn btn-primary btn-large"
+                aria-label="Close victory modal and continue">Continue</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>
