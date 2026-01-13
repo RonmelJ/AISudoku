@@ -12,8 +12,9 @@ const gameState = {
     totalPoints: 0,
     gamesWon: 0,
     currentSkin: 'classic',
-    unlockedSkins: ['classic'],
-    isPaused: false
+    isPaused: false,
+    gameInProgress: false,
+    isRevealing: false
 };
 
 // ===== SKIN DEFINITIONS =====
@@ -51,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const difficultySelect = document.getElementById('difficulty');
         const closeModalBtn = document.getElementById('closeModal');
 
-        if (newGameBtn) newGameBtn.addEventListener('click', startNewGame);
+        if (newGameBtn) newGameBtn.addEventListener('click', handleMainButtonClick);
         if (hintBtn) hintBtn.addEventListener('click', useHint);
         if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
         if (difficultySelect) {
@@ -404,6 +405,13 @@ function startNewGame() {
     gameState.startTime = Date.now();
     gameState.pausedTime = 0;
     gameState.isPaused = false;
+    gameState.gameInProgress = true;
+    gameState.isRevealing = false;
+
+    // Update main button
+    const mainBtn = document.getElementById('newGameBtn');
+    mainBtn.innerHTML = '<span class="btn-icon">👁️</span>Reveal Solution';
+    mainBtn.classList.add('btn-reveal');
 
     // Update pause button
     const pauseBtn = document.getElementById('pauseBtn');
@@ -413,6 +421,7 @@ function startNewGame() {
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
         cell.dataset.userPlaced = '';
+        cell.classList.remove('revealed');
     });
 
     renderBoard();
@@ -421,6 +430,54 @@ function startNewGame() {
 
     // Start timer
     gameState.timerInterval = setInterval(updateTimer, 1000);
+}
+
+function handleMainButtonClick() {
+    if (gameState.gameInProgress && !gameState.isRevealing) {
+        if (confirm('Are you sure you want to end this game and reveal the solution? No points will be awarded.')) {
+            revealSolution();
+        }
+    } else if (!gameState.isRevealing) {
+        startNewGame();
+    }
+}
+
+async function revealSolution() {
+    gameState.isRevealing = true;
+    gameState.gameInProgress = false;
+
+    // Stop timer
+    if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+    }
+
+    const mainBtn = document.getElementById('newGameBtn');
+    mainBtn.innerHTML = '<span class="btn-icon">⌛</span>Revealing...';
+    mainBtn.classList.add('loading');
+
+    const cells = document.querySelectorAll('.cell');
+
+    // Smooth staggered reveal
+    for (let i = 0; i < 81; i++) {
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+
+        if (gameState.board[row][col] !== gameState.solution[row][col]) {
+            await new Promise(resolve => setTimeout(resolve, 20)); // Delay between cells
+            gameState.board[row][col] = gameState.solution[row][col];
+            cells[i].textContent = gameState.solution[row][col];
+            cells[i].classList.add('revealed');
+            cells[i].dataset.userPlaced = 'true';
+        }
+    }
+
+    // Reset button after reveal
+    setTimeout(() => {
+        mainBtn.innerHTML = '<span class="btn-icon">🎮</span>New Game';
+        mainBtn.classList.remove('btn-reveal', 'loading');
+        gameState.isRevealing = false;
+        saveGameState();
+    }, 1000);
 }
 
 function togglePause() {
@@ -508,17 +565,43 @@ function handleVictory() {
         clearInterval(gameState.timerInterval);
     }
 
+    gameState.gameInProgress = false;
+
+    // Reset main button
+    const mainBtn = document.getElementById('newGameBtn');
+    mainBtn.innerHTML = '<span class="btn-icon">🎮</span>New Game';
+    mainBtn.classList.remove('btn-reveal');
+
     const elapsedTime = Math.floor((Date.now() - gameState.startTime) / 1000);
     const settings = difficultySettings[gameState.difficulty];
 
-    // Calculate points
+    // Calculate base points
     let points = settings.basePoints;
 
-    // Time bonus
+    // ----- Tiered Time Bonus System -----
     let timeBonus = 0;
+    let timePercentage = (elapsedTime / settings.targetTime) * 100;
+
+    // Base bonus calculation (standard formula)
+    let baseBonus = Math.max(0, Math.floor((settings.targetTime - elapsedTime) / 10) * 10);
+
     if (elapsedTime < settings.targetTime) {
-        timeBonus = Math.floor((settings.targetTime - elapsedTime) / 10) * 10;
+        if (timePercentage < 25) {
+            // Master Tier: Fast completion (< 25% of target time)
+            timeBonus = baseBonus * 3;
+        } else if (timePercentage < 50) {
+            // Expert Tier (< 50% of target time)
+            timeBonus = baseBonus * 2;
+        } else if (timePercentage < 75) {
+            // Advanced Tier (< 75% of target time)
+            timeBonus = baseBonus * 1.5;
+        } else {
+            // Standard Tier (< 100% of target time)
+            timeBonus = baseBonus;
+        }
     }
+
+    timeBonus = Math.floor(timeBonus);
 
     // Hint penalty
     const hintPenalty = gameState.hintsUsed * 50;
@@ -736,7 +819,8 @@ function saveGameState() {
             totalPoints: gameState.totalPoints,
             gamesWon: gameState.gamesWon,
             currentSkin: gameState.currentSkin,
-            unlockedSkins: gameState.unlockedSkins
+            unlockedSkins: gameState.unlockedSkins,
+            gameInProgress: gameState.gameInProgress
         };
         localStorage.setItem('sudokuGameState', JSON.stringify(stateToSave));
     } catch (error) {
@@ -765,6 +849,14 @@ function loadGameState() {
                 gameState.difficulty = data.difficulty || 'medium';
                 gameState.startTime = data.startTime;
                 gameState.hintsUsed = data.hintsUsed || 0;
+                gameState.gameInProgress = data.gameInProgress || false;
+                gameState.isRevealing = false;
+
+                if (gameState.gameInProgress && !isPuzzleComplete()) {
+                    const mainBtn = document.getElementById('newGameBtn');
+                    mainBtn.innerHTML = '<span class="btn-icon">👁️</span>Reveal Solution';
+                    mainBtn.classList.add('btn-reveal');
+                }
 
                 renderBoard();
 
