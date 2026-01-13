@@ -1,9 +1,9 @@
 {
-  "name": "Sudoku Master",
-  "short_name": "Sudoku",
+  "name": "AISudoku",
+  "short_name": "AISudoku",
   "description": "Free online Sudoku game with multiple difficulty levels and unlockable themes",
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#0f172a",
   "theme_color": "#4f46e5",
   "orientation": "portrait",
@@ -21,7 +21,10 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "screenshots": [
     {
       "src": "screenshot1.png",
