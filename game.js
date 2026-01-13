@@ -1,4 +1,3 @@
-// ===== GAME STATE =====
 const gameState = {
     board: [],
     solution: [],
@@ -6,12 +5,14 @@ const gameState = {
     difficulty: 'medium',
     startTime: null,
     pausedTime: 0,
+    totalPauseDuration: 0,
     timerInterval: null,
     hintsUsed: 0,
     streak: 0,
     totalPoints: 0,
     gamesWon: 0,
     currentSkin: 'classic',
+    unlockedSkins: ['classic'], // Fix: Initialize with default skin
     isPaused: false,
     gameInProgress: false,
     isRevealing: false
@@ -40,10 +41,10 @@ const difficultySettings = {
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        loadGameState();
+        // Initialize grid first so we can render to it
         initializeGrid();
         initializeSkins();
-        updateUI();
+        loadGameState();
 
         // Event Listeners with null checks
         const newGameBtn = document.getElementById('newGameBtn');
@@ -52,7 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const difficultySelect = document.getElementById('difficulty');
         const closeModalBtn = document.getElementById('closeModal');
 
-        if (newGameBtn) newGameBtn.addEventListener('click', handleMainButtonClick);
+        if (newGameBtn) {
+            newGameBtn.addEventListener('click', () => {
+                if (gameState.gameInProgress) {
+                    handleMainButtonClick();
+                } else {
+                    startNewGame();
+                }
+            });
+        }
+
         if (hintBtn) hintBtn.addEventListener('click', useHint);
         if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
         if (difficultySelect) {
@@ -74,11 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Keyboard support
         document.addEventListener('keydown', handleKeyPress);
+
+        // Initial UI Update based on state
+        updateUI();
+
     } catch (error) {
         console.error('Initialization error:', error);
     }
 });
 
+// ===== SUDOKU GENERATOR =====
 // ===== SUDOKU GENERATOR =====
 function generateSudoku(difficulty) {
     const board = Array(9).fill(null).map(() => Array(9).fill(0));
@@ -92,22 +107,57 @@ function generateSudoku(difficulty) {
     // Create a copy as solution
     const solution = board.map(row => [...row]);
 
-    // Remove numbers based on difficulty
-    const clues = difficultySettings[difficulty].clues;
-    const cellsToRemove = 81 - clues;
+    // Remove numbers based on difficulty while ensuring unique solution
+    const cluesTarget = difficultySettings[difficulty].clues;
 
-    let removed = 0;
-    while (removed < cellsToRemove) {
-        const row = Math.floor(Math.random() * 9);
-        const col = Math.floor(Math.random() * 9);
+    // Create list of all cell positions
+    let cells = [];
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            cells.push([i, j]);
+        }
+    }
+    shuffleArray(cells);
 
-        if (board[row][col] !== 0) {
-            board[row][col] = 0;
-            removed++;
+    let currentClues = 81;
+
+    for (const [row, col] of cells) {
+        if (currentClues <= cluesTarget) break;
+
+        const backup = board[row][col];
+        board[row][col] = 0;
+
+        // Check if solution is still unique
+        // We pass a limit of 2 because we only care if there is > 1 solution
+        const copyBoard = board.map(r => [...r]);
+        if (countSolutions(copyBoard, 2) !== 1) {
+            board[row][col] = backup; // Put it back, removing it creates ambiguity
+        } else {
+            currentClues--;
         }
     }
 
     return { board, solution };
+}
+
+function countSolutions(board, limit) {
+    const emptyCell = findEmptyCell(board);
+    if (!emptyCell) return 1;
+
+    const [row, col] = emptyCell;
+    let count = 0;
+
+    for (let num = 1; num <= 9; num++) {
+        if (isValid(board, row, col, num)) {
+            board[row][col] = num;
+            count += countSolutions(board, limit);
+            board[row][col] = 0; // Backtrack
+
+            if (count >= limit) return count;
+        }
+    }
+
+    return count;
 }
 
 function fillDiagonalBoxes(board) {
@@ -403,7 +453,8 @@ function startNewGame() {
     gameState.hintsUsed = 0;
     gameState.streak = 0;
     gameState.startTime = Date.now();
-    gameState.pausedTime = 0;
+    gameState.pausedTime = 0; // Reset paused time
+    gameState.totalPauseDuration = 0; // Track total time spent in pause
     gameState.isPaused = false;
     gameState.gameInProgress = true;
     gameState.isRevealing = false;
@@ -417,9 +468,14 @@ function startNewGame() {
     const pauseBtn = document.getElementById('pauseBtn');
     pauseBtn.innerHTML = '<span class="btn-icon">⏸</span>Pause';
 
+    // Unpause grid
+    const grid = document.getElementById('sudokuGrid');
+    if (grid) grid.classList.remove('paused');
+
     // Mark initial cells
     const cells = document.querySelectorAll('.cell');
     cells.forEach(cell => {
+        if (!cell) return;
         cell.dataset.userPlaced = '';
         cell.classList.remove('revealed');
     });
@@ -481,7 +537,7 @@ async function revealSolution() {
 }
 
 function togglePause() {
-    if (!gameState.startTime) return; // No game in progress
+    if (!gameState.gameInProgress || gameState.isRevealing) return; // Only pause active games
 
     gameState.isPaused = !gameState.isPaused;
     const pauseBtn = document.getElementById('pauseBtn');
@@ -490,17 +546,25 @@ function togglePause() {
     if (gameState.isPaused) {
         // Pause the game
         clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+
         pauseBtn.innerHTML = '<span class="btn-icon">▶</span>Resume';
-        grid.classList.add('paused');
-        gameState.pausedTime = Date.now();
+        if (grid) grid.classList.add('paused');
+
+        gameState.pausedTime = Date.now(); // Record when we started pausing
     } else {
         // Resume the game
-        const pauseDuration = Date.now() - gameState.pausedTime;
-        gameState.startTime += pauseDuration;
+        if (gameState.pausedTime) {
+            const currentPauseDuration = Date.now() - gameState.pausedTime;
+            gameState.totalPauseDuration = (gameState.totalPauseDuration || 0) + currentPauseDuration;
+            gameState.pausedTime = 0; // Reset current pause start time
+        }
+
         gameState.timerInterval = setInterval(updateTimer, 1000);
         pauseBtn.innerHTML = '<span class="btn-icon">⏸</span>Pause';
-        grid.classList.remove('paused');
+        if (grid) grid.classList.remove('paused');
     }
+    saveGameState();
 }
 
 function useHint() {
@@ -756,12 +820,21 @@ function updateUI() {
 function updateTimer() {
     if (!gameState.startTime) return;
 
-    const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+    // Calculate effective elapsed time: (Now - Start) - Total time spent paused
+    // If currently paused, we freeze the "Now" at the pausedTime
+    const now = gameState.isPaused ? gameState.pausedTime : Date.now();
+    const effectiveElapsed = Math.floor((now - gameState.startTime - (gameState.totalPauseDuration || 0)) / 1000);
+
+    // Sanity check
+    const elapsed = Math.max(0, effectiveElapsed);
+
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
 
-    document.getElementById('timer').textContent =
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const timerEl = document.getElementById('timer');
+    if (timerEl) {
+        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
 }
 
 // ===== KEYBOARD SUPPORT =====
@@ -820,7 +893,12 @@ function saveGameState() {
             gamesWon: gameState.gamesWon,
             currentSkin: gameState.currentSkin,
             unlockedSkins: gameState.unlockedSkins,
-            gameInProgress: gameState.gameInProgress
+            gameInProgress: gameState.gameInProgress,
+
+            // New persistent state
+            isPaused: gameState.isPaused,
+            pausedTime: gameState.pausedTime,
+            totalPauseDuration: gameState.totalPauseDuration || 0
         };
         localStorage.setItem('sudokuGameState', JSON.stringify(stateToSave));
     } catch (error) {
@@ -852,17 +930,56 @@ function loadGameState() {
                 gameState.gameInProgress = data.gameInProgress || false;
                 gameState.isRevealing = false;
 
+                // Restore pause state
+                gameState.isPaused = data.isPaused || false;
+                gameState.pausedTime = data.pausedTime || 0;
+                gameState.totalPauseDuration = data.totalPauseDuration || 0;
+
+                // Sync button state
+                const mainBtn = document.getElementById('newGameBtn');
                 if (gameState.gameInProgress && !isPuzzleComplete()) {
-                    const mainBtn = document.getElementById('newGameBtn');
-                    mainBtn.innerHTML = '<span class="btn-icon">👁️</span>Reveal Solution';
-                    mainBtn.classList.add('btn-reveal');
+                    if (mainBtn) {
+                        mainBtn.innerHTML = '<span class="btn-icon">👁️</span>Reveal Solution';
+                        mainBtn.classList.add('btn-reveal');
+                    }
+                } else {
+                    if (mainBtn) {
+                        mainBtn.innerHTML = '<span class="btn-icon">🎮</span>New Game';
+                        mainBtn.classList.remove('btn-reveal');
+                    }
                 }
 
+                // Initial render
                 renderBoard();
 
-                // Restart timer if game was in progress
-                if (gameState.startTime && !isPuzzleComplete()) {
-                    gameState.timerInterval = setInterval(updateTimer, 1000);
+                // Handle timer and pause UI
+                if (gameState.gameInProgress && !isPuzzleComplete()) {
+                    if (gameState.isPaused) {
+                        // If paused, keep timer stopped and show resume button
+                        const pauseBtn = document.getElementById('pauseBtn');
+                        const grid = document.getElementById('sudokuGrid');
+
+                        if (pauseBtn) pauseBtn.innerHTML = '<span class="btn-icon">▶</span>Resume';
+                        if (grid) grid.classList.add('paused');
+
+                        // If it was paused and reloaded, we need to add the "time since last save" to the pause duration
+                        // because the time between "last save" and "now" is technically "offline/paused" time.
+                        if (gameState.pausedTime > 0) {
+                            // The diff between now and when we paused needs to be accounted for, 
+                            // but simpler: just update pausedTime to NOW so that when we resume,
+                            // we calculate the diff correctly from this new session start.
+                            // Actually, let's just leave pausedTime as is? No, if we reload 1 hour later,
+                            // the browser time progressed 1 hour.
+                            // If we rely on Date.now() - pausedTime in togglePause, we are good.
+                        }
+
+                        // Force a timer update to show the frozen time
+                        updateTimer();
+                    } else {
+                        // If running, restart timer
+                        gameState.timerInterval = setInterval(updateTimer, 1000);
+                        updateTimer();
+                    }
                 }
             }
         }
