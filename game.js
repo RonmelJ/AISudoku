@@ -595,6 +595,40 @@ function togglePause() {
     saveGameState();
 }
 
+/**
+ * Force the game to pause. Used for auto-pause on visibility change.
+ */
+function forcePause() {
+    if (!gameState.gameInProgress || gameState.isPaused || gameState.isRevealing) return;
+
+    gameState.isPaused = true;
+    const pauseBtn = document.getElementById('pauseBtn');
+    const grid = document.getElementById('sudokuGrid');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+
+    // Pause the game
+    clearInterval(gameState.timerInterval);
+    gameState.timerInterval = null;
+
+    if (pauseBtn) pauseBtn.innerHTML = '<span class="btn-icon">▶</span>Resume';
+    if (grid) grid.classList.add('paused');
+    if (pauseOverlay) {
+        pauseOverlay.classList.add('active');
+        pauseOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    gameState.pausedTime = Date.now(); // Record when we started pausing
+    saveGameState();
+    updateTimer();
+}
+
+// Handle auto-pause when user switches tabs or closes/minimizes the app
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        forcePause();
+    }
+});
+
 function useHint() {
     if (gameState.isPaused) return;
 
