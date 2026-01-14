@@ -72,6 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (closeModalBtn) closeModalBtn.addEventListener('click', closeVictoryModal);
 
+        // Skins Dropdown Listeners
+        const skinsToggle = document.getElementById('skinsToggle');
+        const closeSkinsBtn = document.getElementById('closeSkins');
+        const skinsOverlay = document.getElementById('skinsOverlay');
+
+        if (skinsToggle) skinsToggle.addEventListener('click', toggleSkinsMenu);
+        if (closeSkinsBtn) closeSkinsBtn.addEventListener('click', closeSkinsMenu);
+        if (skinsOverlay) skinsOverlay.addEventListener('click', closeSkinsMenu);
+
+        // Pause Overlay Click to Resume
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        if (pauseOverlay) pauseOverlay.addEventListener('click', togglePause);
+
         // Number pad listeners
         document.querySelectorAll('.num-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -542,6 +555,7 @@ function togglePause() {
     gameState.isPaused = !gameState.isPaused;
     const pauseBtn = document.getElementById('pauseBtn');
     const grid = document.getElementById('sudokuGrid');
+    const pauseOverlay = document.getElementById('pauseOverlay');
 
     if (gameState.isPaused) {
         // Pause the game
@@ -550,6 +564,10 @@ function togglePause() {
 
         pauseBtn.innerHTML = '<span class="btn-icon">▶</span>Resume';
         if (grid) grid.classList.add('paused');
+        if (pauseOverlay) {
+            pauseOverlay.classList.add('active');
+            pauseOverlay.setAttribute('aria-hidden', 'false');
+        }
 
         gameState.pausedTime = Date.now(); // Record when we started pausing
     } else {
@@ -563,6 +581,10 @@ function togglePause() {
         gameState.timerInterval = setInterval(updateTimer, 1000);
         pauseBtn.innerHTML = '<span class="btn-icon">⏸</span>Pause';
         if (grid) grid.classList.remove('paused');
+        if (pauseOverlay) {
+            pauseOverlay.classList.remove('active');
+            pauseOverlay.setAttribute('aria-hidden', 'true');
+        }
     }
     saveGameState();
 }
@@ -720,6 +742,25 @@ function closeVictoryModal() {
     document.getElementById('confetti').innerHTML = '';
 }
 
+// ===== SKINS MENU MANAGEMENT =====
+function toggleSkinsMenu() {
+    const panel = document.getElementById('skinsPanel');
+    const overlay = document.getElementById('skinsOverlay');
+    if (panel && overlay) {
+        panel.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+}
+
+function closeSkinsMenu() {
+    const panel = document.getElementById('skinsPanel');
+    const overlay = document.getElementById('skinsOverlay');
+    if (panel && overlay) {
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+}
+
 function createConfetti() {
     const container = document.getElementById('confetti');
     const colors = ['#4f46e5', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981'];
@@ -768,6 +809,9 @@ function initializeSkins() {
         preview.style.background = `linear-gradient(135deg, ${skin.color}, ${adjustColor(skin.color, -20)})`;
         preview.setAttribute('aria-hidden', 'true');
 
+        const info = document.createElement('div');
+        info.className = 'skin-info';
+
         const name = document.createElement('div');
         name.className = 'skin-name';
         name.textContent = skin.name;
@@ -776,12 +820,17 @@ function initializeSkins() {
         cost.className = 'skin-cost';
         cost.textContent = skin.cost === 0 ? 'Default' : `${skin.cost} pts`;
 
+        info.appendChild(name);
+        info.appendChild(cost);
+
         card.appendChild(preview);
-        card.appendChild(name);
-        card.appendChild(cost);
+        card.appendChild(info);
 
         if (gameState.unlockedSkins.includes(skin.id)) {
-            card.addEventListener('click', () => applySkin(skin.id));
+            card.addEventListener('click', () => {
+                applySkin(skin.id);
+                closeSkinsMenu();
+            });
             card.setAttribute('tabindex', '0');
             card.setAttribute('aria-label', `${skin.name} theme, ${cost.textContent}. ${isActive ? 'Currently active' : 'Click to activate'}`);
         } else {
@@ -961,6 +1010,12 @@ function loadGameState() {
 
                         if (pauseBtn) pauseBtn.innerHTML = '<span class="btn-icon">▶</span>Resume';
                         if (grid) grid.classList.add('paused');
+
+                        const pauseOverlay = document.getElementById('pauseOverlay');
+                        if (pauseOverlay) {
+                            pauseOverlay.classList.add('active');
+                            pauseOverlay.setAttribute('aria-hidden', 'false');
+                        }
 
                         // If it was paused and reloaded, we need to add the "time since last save" to the pause duration
                         // because the time between "last save" and "now" is technically "offline/paused" time.

@@ -102,9 +102,10 @@
     <div class="container">
         <!-- Header -->
         <header class="header" role="banner">
-            <h1 class="title">
-                AISudoku
-            </h1>
+            <div class="title-group">
+                <h1 class="title">AISudoku</h1>
+                <div class="subtitle">by RonmelJ</div>
+            </div>
             <div class="stats-bar">
                 <div class="stat-item">
                     <span class="stat-label">Points</span>
@@ -149,11 +150,23 @@
                     <span class="btn-icon" aria-hidden="true">⏸</span>
                     Pause
                 </button>
+                <button id="skinsToggle" class="btn btn-secondary" aria-label="Open themes menu">
+                    <span class="btn-icon" aria-hidden="true">🎨</span>
+                    Themes
+                </button>
             </div>
 
             <!-- Sudoku Grid -->
             <div class="sudoku-wrapper">
                 <div id="sudokuGrid" class="sudoku-grid" role="grid" aria-label="Sudoku puzzle grid"></div>
+                <!-- Interactive Pause Overlay -->
+                <div id="pauseOverlay" class="pause-overlay" aria-hidden="true">
+                    <div class="pause-content">
+                        <div class="pause-icon">▶</div>
+                        <div class="pause-title">PAUSED</div>
+                        <div class="pause-instruction">Click anywhere to resume</div>
+                    </div>
+                </div>
                 <div class="game-info">
                     <div class="info-item">
                         <span class="info-icon">🔥</span>
@@ -183,9 +196,13 @@
             </div>
         </main>
 
-        <!-- Skins Panel -->
-        <aside class="skins-panel" role="complementary" aria-label="Theme selection">
-            <h2 class="panel-title">Unlockable Skins</h2>
+        <!-- Skins Panel (Dropdown) -->
+        <div id="skinsOverlay" class="skins-overlay"></div>
+        <aside class="skins-panel" id="skinsPanel" role="complementary" aria-label="Theme selection">
+            <div class="panel-header">
+                <h2 class="panel-title">Unlockable Skins</h2>
+                <button id="closeSkins" class="close-btn" aria-label="Close themes menu">✕</button>
+            </div>
             <div class="skins-grid" id="skinsGrid" role="list">
                 <!-- Skins will be populated by JavaScript -->
             </div>
