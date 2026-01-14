@@ -72,6 +72,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (closeModalBtn) closeModalBtn.addEventListener('click', closeVictoryModal);
 
+        const confirmRevealBtn = document.getElementById('confirmReveal');
+        const cancelRevealBtn = document.getElementById('cancelReveal');
+
+        if (confirmRevealBtn) confirmRevealBtn.addEventListener('click', () => {
+            closeRevealModal();
+            revealSolution();
+        });
+        if (cancelRevealBtn) cancelRevealBtn.addEventListener('click', closeRevealModal);
+
         // Number pad listeners
         document.querySelectorAll('.num-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -93,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ===== SUDOKU GENERATOR =====
 // ===== SUDOKU GENERATOR =====
 function generateSudoku(difficulty) {
     const board = Array(9).fill(null).map(() => Array(9).fill(0));
@@ -490,9 +498,7 @@ function startNewGame() {
 
 function handleMainButtonClick() {
     if (gameState.gameInProgress && !gameState.isRevealing) {
-        if (confirm('Are you sure you want to end this game and reveal the solution? No points will be awarded.')) {
-            revealSolution();
-        }
+        showRevealModal();
     } else if (!gameState.isRevealing) {
         startNewGame();
     }
@@ -652,16 +658,16 @@ function handleVictory() {
     if (elapsedTime < settings.targetTime) {
         if (timePercentage < 25) {
             // Master Tier: Fast completion (< 25% of target time)
-            timeBonus = baseBonus * 3;
+            timeBonus = baseBonus * 2;
         } else if (timePercentage < 50) {
             // Expert Tier (< 50% of target time)
-            timeBonus = baseBonus * 2;
+            timeBonus = baseBonus * 1.5;
         } else if (timePercentage < 75) {
             // Advanced Tier (< 75% of target time)
-            timeBonus = baseBonus * 1.5;
+            timeBonus = baseBonus;
         } else {
             // Standard Tier (< 100% of target time)
-            timeBonus = baseBonus;
+            timeBonus = baseBonus * 0.5;
         }
     }
 
@@ -718,6 +724,16 @@ function showVictoryModal(time, points, timeBonus, newSkins) {
 function closeVictoryModal() {
     document.getElementById('victoryModal').classList.remove('active');
     document.getElementById('confetti').innerHTML = '';
+}
+
+function showRevealModal() {
+    const modal = document.getElementById('revealModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeRevealModal() {
+    const modal = document.getElementById('revealModal');
+    if (modal) modal.classList.remove('active');
 }
 
 function createConfetti() {

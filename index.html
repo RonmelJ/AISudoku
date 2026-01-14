@@ -217,6 +217,21 @@
         </div>
     </div>
 
+    <!-- Reveal Confirmation Modal -->
+    <div id="revealModal" class="modal" role="dialog" aria-labelledby="revealTitle" aria-modal="true">
+        <div class="modal-content">
+            <h2 class="modal-title" id="revealTitle"><span aria-hidden="true">⚠️</span> Reveal Solution?</h2>
+            <p class="modal-message">Are you sure you want to end this game and reveal the solution? No points will be
+                awarded for this session.</p>
+            <div class="modal-actions">
+                <button id="confirmReveal" class="btn btn-reveal btn-large"
+                    aria-label="Confirm reveal solution">Reveal</button>
+                <button id="cancelReveal" class="btn btn-primary btn-large"
+                    aria-label="Cancel reveal and keep playing">Keep Playing</button>
+            </div>
+        </div>
+    </div>
+
     <script src="game.js"></script>
 </body>
 
