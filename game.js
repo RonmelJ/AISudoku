@@ -15,7 +15,8 @@ const gameState = {
     unlockedSkins: ['classic'], // Fix: Initialize with default skin
     isPaused: false,
     gameInProgress: false,
-    isRevealing: false
+    isRevealing: false,
+    activeTimeouts: []
 };
 
 // ===== SKIN DEFINITIONS =====
@@ -448,12 +449,14 @@ function checkSquareCompletion(row, col) {
                 const cell = cells[cellIndex];
 
                 // Add completion animation with stagger
-                setTimeout(() => {
+                const t1 = setTimeout(() => {
                     cell.classList.add('square-complete');
-                    setTimeout(() => {
+                    const t2 = setTimeout(() => {
                         cell.classList.remove('square-complete');
                     }, 800);
+                    gameState.activeTimeouts.push(t2);
                 }, (i * 3 + j) * 50);
+                gameState.activeTimeouts.push(t1);
             }
         }
     }
@@ -465,6 +468,15 @@ function startNewGame() {
     if (gameState.timerInterval) {
         clearInterval(gameState.timerInterval);
     }
+
+    // Clear any pending animations
+    if (gameState.activeTimeouts) {
+        gameState.activeTimeouts.forEach(clearTimeout);
+        gameState.activeTimeouts = [];
+    }
+
+    // Stop extended reveal if running
+    gameState.isRevealing = false;
 
     // Generate new puzzle
     const { board, solution } = generateSudoku(gameState.difficulty);
@@ -539,6 +551,7 @@ async function revealSolution() {
 
         if (gameState.board[row][col] !== gameState.solution[row][col]) {
             await new Promise(resolve => setTimeout(resolve, 20)); // Delay between cells
+            if (!gameState.isRevealing) return; // Stop if new game started
             gameState.board[row][col] = gameState.solution[row][col];
             cells[i].textContent = gameState.solution[row][col];
             cells[i].classList.add('revealed');
@@ -698,7 +711,7 @@ function handleVictory() {
     mainBtn.innerHTML = '<span class="btn-icon">🎮</span>New Game';
     mainBtn.classList.remove('btn-reveal');
 
-    const elapsedTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+    const elapsedTime = Math.floor((Date.now() - gameState.startTime - (gameState.totalPauseDuration || 0)) / 1000);
     const settings = difficultySettings[gameState.difficulty];
 
     // Calculate base points
